@@ -23,7 +23,9 @@ export interface Transaction {
 
 export interface GoogleDriveConfig {
   isConnected: boolean;
+  userName?: string;
   userEmail?: string;
+  userPicture?: string;
   lastSyncTime?: string;
   autoSync: boolean;
   accessToken?: string;

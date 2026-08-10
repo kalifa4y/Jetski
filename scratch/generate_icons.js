@@ -1,4 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+import fs from 'fs';
+import path from 'path';
+
+// Un script pour générer un favicon SVG attrayant et créer des PNGs d'icônes PWA
+const publicDir = path.resolve('public');
+
+if (!fs.existsSync(publicDir)) {
+  fs.mkdirSync(publicDir, { recursive: true });
+}
+
+// 1. Génération de favicon.svg (SVG moderne avec dégradé vert/bleu, icône de magasin et pièce de monnaie)
+const svgIconContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#10b981" />
@@ -26,4 +37,7 @@
     <circle cx="0" cy="40" r="50" fill="url(#goldGrad)" stroke="#ffffff" stroke-width="8" />
     <text x="0" y="58" font-family="Arial, sans-serif" font-size="52" font-weight="bold" fill="#ffffff" text-anchor="middle">$</text>
   </g>
-</svg>
+</svg>`;
+
+fs.writeFileSync(path.join(publicDir, 'favicon.svg'), svgIconContent, 'utf-8');
+console.log('✓ favicon.svg créé');

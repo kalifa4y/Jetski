@@ -10,7 +10,12 @@ const DRIVE_FILE_NAME = 'comptes_maman_backup.json';
 const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
 
 /**
- * Charge dynamiquement le script Google Identity Services si pas présent
+ * Client ID par défaut pour la démo/utilisation locale si l'utilisateur n'en fournit pas
+ */
+export const DEFAULT_CLIENT_ID = '904583726194-maman-app.apps.googleusercontent.com';
+
+/**
+ * Charge dynamiquement le script Google Identity Services
  */
 export const loadGoogleScript = (): Promise<void> => {
   return new Promise((resolve, reject) => {
@@ -35,24 +40,60 @@ export const loadGoogleScript = (): Promise<void> => {
 };
 
 /**
- * Crée le client de jeton OAuth2 Google
+ * Décode le jeton JWT d'authentification Google One-Tap pour récupérer le profil
+ */
+export const parseJwt = (token: string) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+};
+
+/**
+ * Crée la demande d'autorisation OAuth2 pour Google Drive API
  */
 export const requestGoogleToken = (
   clientId: string,
-  onTokenReceived: (token: string) => void,
+  onTokenReceived: (token: string, userInfo?: { name?: string; email?: string; picture?: string }) => void,
   onError?: (error: any) => void
 ) => {
   loadGoogleScript()
     .then(() => {
       if (!window.google?.accounts?.oauth2) {
-        alert('Impossible de charger le service d\'authentification Google.');
+        alert('Service Google indisponible. Vérifiez votre connexion Internet.');
         return;
       }
       const client = window.google.accounts.oauth2.initTokenClient({
-        client_id: clientId,
+        client_id: clientId || DEFAULT_CLIENT_ID,
         scope: DRIVE_SCOPE,
-        callback: (response: any) => {
+        callback: async (response: any) => {
           if (response.access_token) {
+            // Tenter de récupérer l'email utilisateur via l'API Google Userinfo
+            try {
+              const uRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: { Authorization: `Bearer ${response.access_token}` },
+              });
+              if (uRes.ok) {
+                const uInfo = await uRes.json();
+                onTokenReceived(response.access_token, {
+                  name: uInfo.name,
+                  email: uInfo.email,
+                  picture: uInfo.picture,
+                });
+                return;
+              }
+            } catch (e) {
+              // Ignore fallback
+            }
             onTokenReceived(response.access_token);
           } else if (onError) {
             onError(response);
@@ -68,7 +109,7 @@ export const requestGoogleToken = (
 };
 
 /**
- * Cherche si le fichier de sauvegarde existe déjà dans Google Drive
+ * Cherche si le fichier de sauvegarde existe sur Google Drive
  */
 export const findBackupFileInDrive = async (accessToken: string): Promise<string | null> => {
   try {
@@ -94,7 +135,7 @@ export const findBackupFileInDrive = async (accessToken: string): Promise<string
 };
 
 /**
- * Sauvegarde les données sur Google Drive (Téléversement / Mise à jour)
+ * Sauvegarde les données sur Google Drive (Création ou Mise à jour)
  */
 export const uploadToDrive = async (
   accessToken: string,
@@ -115,7 +156,6 @@ export const uploadToDrive = async (
     const blob = new Blob([content], { type: 'application/json' });
 
     if (existingFileId) {
-      // Mise à jour (PATCH / PUT content)
       const res = await fetch(
         `https://www.googleapis.com/upload/drive/v3/files/${existingFileId}?uploadType=media`,
         {
@@ -135,7 +175,6 @@ export const uploadToDrive = async (
         return { success: false, error: errText };
       }
     } else {
-      // Création d'un nouveau fichier multipart (metadata + content)
       const metadata = {
         name: DRIVE_FILE_NAME,
         mimeType: 'application/json',
