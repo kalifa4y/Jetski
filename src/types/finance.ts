@@ -21,17 +21,6 @@ export interface Transaction {
   createdAt: number;
 }
 
-export interface GoogleDriveConfig {
-  isConnected: boolean;
-  userName?: string;
-  userEmail?: string;
-  userPicture?: string;
-  lastSyncTime?: string;
-  autoSync: boolean;
-  accessToken?: string;
-  fileId?: string;
-}
-
 export interface Settings {
   currency: string;
   currencySymbol: string;
@@ -40,7 +29,6 @@ export interface Settings {
   theme: 'light' | 'dark';
   defaultPeriod: PeriodFilter;
   dailyGoal?: number;
-  googleDrive?: GoogleDriveConfig;
 }
 
 export interface PeriodSummary {
