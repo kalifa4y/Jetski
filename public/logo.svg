@@ -1,8 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
-  <!-- Anneau Jaune principal -->
-  <path d="M 100 10 A 90 90 0 1 1 10 100 L 52 100 A 48 48 0 1 0 100 52 Z" fill="#E6A100" />
-  
-  <!-- Arc Vert avec l'encoche distinctive -->
-  <path d="M 10 100 C 10 40 40 10 100 10 L 100 52 C 60 52 52 60 52 100 Z" fill="#008542" />
-  <path d="M 10 100 C 10 40 50 10 100 10 L 100 50 C 65 50 50 65 50 100 Z" fill="#008744" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500">
+  <rect width="500" height="500" fill="none" />
+  <!-- Portion Jaune Dorée (du haut 12h à la gauche 9h dans le sens horaire) -->
+  <path d="
+    M 250,30
+    A 220,220 0 1,1 30,250
+    L 140,250
+    A 110,110 0 1,0 250,140
+    Z
+  " fill="#F3A800" />
+
+  <!-- Portion Verte (quart haut-gauche avec l'encoche courbe) -->
+  <path d="
+    M 30,250
+    A 220,220 0 0,1 250,30
+    L 250,140
+    A 150,150 0 0,0 30,250
+    Z
+  " fill="#008744" />
 </svg>
