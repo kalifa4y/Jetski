@@ -18,7 +18,7 @@ import { TransactionList } from './components/TransactionList';
 import { Settings } from './components/Settings';
 import { TransactionModal } from './components/TransactionModal';
 import { CategoryManagerModal } from './components/CategoryManagerModal';
-import { Store, Download } from 'lucide-react';
+import { Download } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
@@ -132,8 +132,8 @@ export const App: React.FC = () => {
       {/* En-tête mobile native */}
       <header className="app-header">
         <div className="brand-info">
-          <div className="brand-icon">
-            <Store size={24} />
+          <div className="brand-icon" style={{ background: 'transparent', boxShadow: 'none', padding: 0, width: '42px', height: '42px' }}>
+            <img src="/logo.svg" alt="Logo Comptes Maman" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
           </div>
           <div>
             <div className="brand-title">{settings.businessName || 'Comptes Maman'}</div>
