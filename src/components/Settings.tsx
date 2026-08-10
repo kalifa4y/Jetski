@@ -3,7 +3,7 @@ import type { Settings as SettingsType, Transaction, Category } from '../types/f
 import { CURRENCIES } from '../utils/constants';
 import { exportToCSV, exportBackupJSON } from '../utils/storage';
 import { requestGoogleToken, uploadToDrive, downloadFromDrive } from '../utils/googleDrive';
-import { Settings as SettingsIcon, Download, Upload, Sun, Moon, ShieldAlert, Check, Cloud, Tag } from 'lucide-react';
+import { Settings as SettingsIcon, Download, Upload, Sun, Moon, ShieldAlert, Check, Cloud, Tag, Key, HelpCircle } from 'lucide-react';
 
 interface SettingsProps {
   settings: SettingsType;
@@ -30,12 +30,13 @@ export const Settings: React.FC<SettingsProps> = ({
   const [theme, setTheme] = useState(settings.theme);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
-  // Google Drive state
+  // Google Drive state & Client ID
   const [googleClientId, setGoogleClientId] = useState(
     localStorage.getItem('gdrive_client_id') || ''
   );
   const [syncingDrive, setSyncingDrive] = useState(false);
   const [driveStatusMsg, setDriveStatusMsg] = useState('');
+  const [showDriveGuide, setShowDriveGuide] = useState(false);
 
   const driveConfig = settings.googleDrive || {
     isConnected: false,
@@ -57,18 +58,24 @@ export const Settings: React.FC<SettingsProps> = ({
     setTimeout(() => setSavedSuccess(false), 2000);
   };
 
+  const handleSaveClientId = (newCid: string) => {
+    setGoogleClientId(newCid);
+    localStorage.setItem('gdrive_client_id', newCid.trim());
+  };
+
   const handleConnectGoogleDrive = () => {
     let cid = googleClientId.trim();
+
     if (!cid) {
       const inputCid = prompt(
-        'Veuillez entrer votre Google Client ID OAuth 2.0 (obtenu sur Google Cloud Console) :\n\nPour tester rapidement sans Client ID, vous pouvez utiliser votre propre ID ou laisser vide pour une démo.',
+        'Pour connecter Google Drive, entrez votre Google Client ID OAuth 2.0 (ex: 12345...apps.googleusercontent.com) :\n\nLaissez vide pour voir les instructions d\'obtention.',
         ''
       );
-      if (inputCid) {
+      if (inputCid && inputCid.trim()) {
         cid = inputCid.trim();
-        setGoogleClientId(cid);
-        localStorage.setItem('gdrive_client_id', cid);
+        handleSaveClientId(cid);
       } else {
+        setShowDriveGuide(true);
         return;
       }
     }
@@ -78,8 +85,7 @@ export const Settings: React.FC<SettingsProps> = ({
 
     requestGoogleToken(
       cid,
-      async (token) => {
-        // Sauvegarde immédiate du premier jeton
+      async (token, uInfo) => {
         const res = await uploadToDrive(token, { transactions, settings, categories });
         setSyncingDrive(false);
         if (res.success) {
@@ -88,6 +94,9 @@ export const Settings: React.FC<SettingsProps> = ({
             ...settings,
             googleDrive: {
               isConnected: true,
+              userEmail: uInfo?.email || 'Google Drive',
+              userName: uInfo?.name || 'Maman',
+              userPicture: uInfo?.picture,
               accessToken: token,
               fileId: res.fileId,
               lastSyncTime: nowStr,
@@ -95,16 +104,21 @@ export const Settings: React.FC<SettingsProps> = ({
             },
           });
           setDriveStatusMsg(`Synchronisé à ${nowStr} !`);
-          alert('Votre compte Google Drive est connecté ! Vos données seront désormais automatiquement sauvegardées dès que vous vous connectez à Internet.');
+          alert('Succès ! Votre compte Google Drive est connecté. Les sauvegardes automatiques sont activées.');
         } else {
-          setDriveStatusMsg('Échec du téléversement.');
-          alert(`Erreur de connexion Drive : ${res.error}`);
+          setDriveStatusMsg('Erreur téléversement.');
+          alert(`Erreur 401 / Connexion Drive : ${res.error || 'Accès non autorisé'}.\nVérifiez que votre Google Client ID est valide et que l\'origine (ex: http://localhost:5173 ou votre site) est ajoutée dans Google Cloud Console.`);
         }
       },
       (_err) => {
         setSyncingDrive(false);
-        setDriveStatusMsg('Erreur d\'autorisation.');
-        alert('Erreur d\'autorisation Google Drive.');
+        setDriveStatusMsg('Erreur d\'autorisation (401)');
+        alert(
+          'Erreur 401 d\'autorisation Google Drive.\n\n' +
+          'Google exige un "Client ID OAuth 2.0" valide pour autoriser l\'accès à Google Drive.\n' +
+          'Cliquez sur "Guide Client ID Google" ci-dessous pour voir comment créer votre Client ID gratuitement en 2 minutes !'
+        );
+        setShowDriveGuide(true);
       }
     );
   };
@@ -144,7 +158,7 @@ export const Settings: React.FC<SettingsProps> = ({
     setSyncingDrive(false);
     if (res.success && res.data) {
       onImportBackup(res.data);
-      alert('Toutes les transactions ont été restaurées depuis Google Drive avec succès !');
+      alert('Toutes les données ont été restaurées depuis Google Drive avec succès !');
     } else {
       alert(`Impossible de restaurer depuis Drive: ${res.error}`);
     }
@@ -179,11 +193,11 @@ export const Settings: React.FC<SettingsProps> = ({
           Options & Paramètres
         </h2>
         <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-          Personnalisez la monnaie, la synchronisation Google Drive et vos catégories.
+          Personnalisez la monnaie, Google Drive et vos catégories.
         </p>
       </div>
 
-      {/* Section Gestion des Catégories Personnalisées */}
+      {/* Section Catégories sur-mesure */}
       <div
         style={{
           background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
@@ -200,7 +214,7 @@ export const Settings: React.FC<SettingsProps> = ({
               <Tag size={20} /> Catégories d'Opérations
             </h3>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-              Créez des catégories sur-mesure pour son activité (Vente de jus, Glaces...).
+              Créez des catégories sur-mesure (Vente de jus, Glaces...).
             </p>
           </div>
           <button
@@ -223,7 +237,7 @@ export const Settings: React.FC<SettingsProps> = ({
         </div>
       </div>
 
-      {/* Section Synchronisation Google Drive (Dès qu'elle est en ligne) */}
+      {/* Section Google Drive */}
       <div
         style={{
           background: 'var(--bg-card)',
@@ -237,7 +251,7 @@ export const Settings: React.FC<SettingsProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
           <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Cloud size={24} color="var(--primary)" />
-            Sauvegarde Automatique Google Drive
+            Sauvegarde Google Drive
           </h3>
           <span
             style={{
@@ -255,18 +269,70 @@ export const Settings: React.FC<SettingsProps> = ({
         </div>
 
         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-          Connectez son compte Google Drive. Dès que son téléphone sera en ligne (Internet actif), ses comptes seront automatiquement sauvegardés sur son Google Drive.
+          Sauvegarde automatique de ses comptes sur son propre espace Google Drive à chaque connexion Internet.
         </p>
 
         {driveConfig.lastSyncTime && (
           <div style={{ fontSize: '0.8rem', color: 'var(--income-color)', fontWeight: 600, marginBottom: '0.75rem' }}>
-            ✓ Dernière sauvegarde automatique : {driveConfig.lastSyncTime}
+            ✓ Dernière sauvegarde : {driveConfig.lastSyncTime}
           </div>
         )}
 
         {driveStatusMsg && (
           <div style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 600, marginBottom: '0.75rem' }}>
             {driveStatusMsg}
+          </div>
+        )}
+
+        {/* Champ Client ID Google */}
+        <div style={{ marginBottom: '1rem', background: 'var(--bg-card-subtle)', padding: '0.85rem', borderRadius: 'var(--radius-md)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+            <label className="form-label" style={{ marginBottom: 0, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+              <Key size={14} /> Google Client ID (OAuth 2.0)
+            </label>
+            <button
+              type="button"
+              style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
+              onClick={() => setShowDriveGuide(!showDriveGuide)}
+            >
+              <HelpCircle size={14} /> Comment l'obtenir ?
+            </button>
+          </div>
+          <input
+            type="text"
+            className="form-input"
+            style={{ fontSize: '0.85rem', padding: '0.5rem 0.75rem' }}
+            placeholder="ex: 123456789-abc...apps.googleusercontent.com"
+            value={googleClientId}
+            onChange={(e) => handleSaveClientId(e.target.value)}
+          />
+        </div>
+
+        {/* Guide rapide pour résoudre l'erreur 401 */}
+        {showDriveGuide && (
+          <div
+            style={{
+              background: '#fffbebf',
+              border: '1px solid #fde68a',
+              borderRadius: 'var(--radius-md)',
+              padding: '0.85rem',
+              fontSize: '0.825rem',
+              color: '#92400e',
+              marginBottom: '1rem',
+              lineHeight: 1.4,
+            }}
+          >
+            <strong>💡 Pourquoi l'erreur 401 ?</strong>
+            <p style={{ marginTop: '0.3rem' }}>
+              Google exige que chaque application web possède son propre <strong>Client ID OAuth 2.0</strong> gratuit :
+            </p>
+            <ol style={{ marginLeft: '1.2rem', marginTop: '0.3rem' }}>
+              <li>Allez sur <a href="https://console.cloud.google.com/" target="_blank" rel="noreferrer" style={{ color: 'var(--primary)', fontWeight: 700 }}>Google Cloud Console</a>.</li>
+              <li>Créez un projet gratuit et activez l'API <strong>Google Drive API</strong>.</li>
+              <li>Dans <strong>Identifiants</strong>, créez un <em>ID client OAuth 2.0</em> (Type : Application Web).</li>
+              <li>Ajoutez votre URL (ex: <code>http://localhost:5173</code> ou <code>https://votre-site.vercel.app</code>) dans <em>Origines JavaScript autorisées</em>.</li>
+              <li>Copiez le Client ID et collez-le ci-dessus !</li>
+            </ol>
           </div>
         )}
 
@@ -294,7 +360,7 @@ export const Settings: React.FC<SettingsProps> = ({
           >
             <Cloud size={20} />
             {syncingDrive
-              ? 'Synchronisation en cours...'
+              ? 'Mise à jour...'
               : driveConfig.isConnected
               ? 'Sauvegarder sur Google Drive maintenant'
               : 'Se Connecter à Google Drive'}
@@ -327,7 +393,7 @@ export const Settings: React.FC<SettingsProps> = ({
         </div>
       </div>
 
-      {/* Formulaire des préférences générales */}
+      {/* Profil et Devise */}
       <form
         onSubmit={handleSaveGeneral}
         style={{
@@ -390,7 +456,7 @@ export const Settings: React.FC<SettingsProps> = ({
               onClick={() => setTheme('light')}
             >
               <Sun size={18} style={{ display: 'inline', marginRight: '0.3rem', verticalAlign: 'middle' }} />
-              Thème Clair (Recommandé)
+              Thème Clair
             </button>
             <button
               type="button"
@@ -427,7 +493,7 @@ export const Settings: React.FC<SettingsProps> = ({
         </button>
       </form>
 
-      {/* Section Exportation et Sauvegarde Fichier */}
+      {/* Exportation Fichiers */}
       <div
         style={{
           background: 'var(--bg-card)',
@@ -441,11 +507,8 @@ export const Settings: React.FC<SettingsProps> = ({
         <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-main)' }}>
           Sauvegardes Fichiers (Excel & JSON)
         </h3>
-        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-          Téléchargez vos comptes sous forme de fichier local ou importez un fichier.
-        </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
           <button
             type="button"
             style={{
