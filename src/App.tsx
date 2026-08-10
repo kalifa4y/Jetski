@@ -133,10 +133,10 @@ export const App: React.FC = () => {
       <header className="app-header">
         <div className="brand-info">
           <div className="brand-icon" style={{ background: 'transparent', boxShadow: 'none', padding: 0, width: '42px', height: '42px' }}>
-            <img src="/logo.svg" alt="Logo Comptes Maman" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            <img src="/logo.svg" alt="Logo NekaWari" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
           </div>
           <div>
-            <div className="brand-title">{settings.businessName || 'Comptes Maman'}</div>
+            <div className="brand-title">{settings.businessName || 'NekaWari'}</div>
             <div className="brand-subtitle" style={{ textTransform: 'capitalize' }}>
               {todayFormatted}
             </div>

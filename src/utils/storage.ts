@@ -110,7 +110,7 @@ export const exportToCSV = (transactions: Transaction[], currency: string = 'FCF
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.setAttribute('href', url);
-  link.setAttribute('download', `gestion_comptes_maman_${new Date().toISOString().split('T')[0]}.csv`);
+  link.setAttribute('download', `nekawari_comptes_${new Date().toISOString().split('T')[0]}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -132,7 +132,7 @@ export const exportBackupJSON = (transactions: Transaction[], settings: Settings
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.setAttribute('href', url);
-  link.setAttribute('download', `sauvegarde_maman_${new Date().toISOString().split('T')[0]}.json`);
+  link.setAttribute('download', `nekawari_sauvegarde_${new Date().toISOString().split('T')[0]}.json`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

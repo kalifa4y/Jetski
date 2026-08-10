@@ -8,11 +8,11 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: ['favicon.svg', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.svg', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'logo.svg'],
       manifest: {
-        name: "Comptes Maman - Gestion Financière & Chiffre d'Affaires",
-        short_name: 'Comptes Maman',
-        description: 'Application simple de suivi des revenus d\'activité, dépenses et Chiffre d\'Affaires pour Maman avec sauvegarde Google Drive.',
+        name: "NekaWari - Gestion Financière & Chiffre d'Affaires",
+        short_name: 'NekaWari',
+        description: 'NekaWari : Application simple et autonome de suivi des revenus d\'activité, dépenses et Chiffre d\'Affaires.',
         theme_color: '#2563eb',
         background_color: '#f8fafc',
         display: 'standalone',

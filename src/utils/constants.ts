@@ -20,7 +20,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
 export const DEFAULT_SETTINGS: Settings = {
   currency: 'FCFA',
   currencySymbol: 'FCFA',
-  businessName: 'Gestion Glaces & Activité',
+  businessName: 'NekaWari',
   ownerName: 'Maman',
   theme: 'light',
   defaultPeriod: 'month',
