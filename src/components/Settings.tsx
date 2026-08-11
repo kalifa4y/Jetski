@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Settings as SettingsType, Transaction, Category } from '../types/finance';
 import { CURRENCIES } from '../utils/constants';
 import { exportToCSV, exportBackupJSON } from '../utils/storage';
 import { PinLockScreen } from './PinLockScreen';
-import { Settings as SettingsIcon, Download, Upload, Sun, Moon, ShieldAlert, Check, Tag, ShieldCheck, KeyRound } from 'lucide-react';
+import { Settings as SettingsIcon, Download, Upload, Sun, Moon, ShieldAlert, Check, Tag, ShieldCheck, KeyRound, Smartphone, Share, CheckCircle2 } from 'lucide-react';
 
 interface SettingsProps {
   settings: SettingsType;
@@ -34,6 +34,49 @@ export const Settings: React.FC<SettingsProps> = ({
 
   // Modal de changement de PIN
   const [isPinModalOpen, setIsPinModalOpen] = useState<boolean>(false);
+
+  // Gestion PWA (Install prompt)
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isStandalone, setIsStandalone] = useState<boolean>(false);
+  const [showIOSGuide, setShowIOSGuide] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    const checkStandalone = () => {
+      const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+      setIsStandalone(!!isStandaloneMode);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    checkStandalone();
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+    };
+  }, []);
+
+  const handleInstallPWA = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+      if (choice.outcome === 'accepted') {
+        setIsStandalone(true);
+      }
+      setDeferredPrompt(null);
+    } else {
+      // Détection iOS Safari ou navigateurs sans prompt direct
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+      if (isIOS) {
+        setShowIOSGuide(true);
+      } else {
+        alert("Pour installer NekaWari sur votre téléphone :\n\n1. Appuyez sur le menu de votre navigateur (3 petits points ⋮ en haut à droite).\n2. Cliquez sur 'Ajouter à l'écran d'accueil' ou 'Installer l'application'.");
+      }
+    }
+  };
 
   const handleSaveGeneral = (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,6 +129,62 @@ export const Settings: React.FC<SettingsProps> = ({
       </div>
 
       <div className="settings-grid">
+        {/* Section Installation PWA */}
+        <div
+          style={{
+            background: 'linear-gradient(135deg, var(--bg-card) 0%, var(--green-bg) 100%)',
+            border: '1.5px solid var(--green-border)',
+            borderRadius: 'var(--radius-lg)',
+            padding: '1.25rem',
+            marginBottom: '1.25rem',
+            boxShadow: 'var(--shadow-sm)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem' }}>
+            <div style={{ padding: '0.5rem', borderRadius: '50%', background: 'var(--primary-green)', color: 'white' }}>
+              <Smartphone size={22} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700 }}>Installer sur mon Téléphone</h3>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                {isStandalone
+                  ? 'Application installée sur cet appareil ✓'
+                  : 'Installez NekaWari comme une application mobile sans Store.'}
+              </p>
+            </div>
+          </div>
+
+          {!isStandalone && (
+            <button
+              type="button"
+              className="btn btn-primary btn-block"
+              style={{ fontWeight: 800 }}
+              onClick={handleInstallPWA}
+            >
+              <Download size={18} /> Installer l'Application NekaWari
+            </button>
+          )}
+
+          {isStandalone && (
+            <div style={{ fontSize: '0.85rem', color: 'var(--primary-green)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+              <CheckCircle2 size={18} /> Mode application autonome actif
+            </div>
+          )}
+
+          {showIOSGuide && (
+            <div style={{ marginTop: '0.85rem', padding: '0.75rem', background: 'var(--bg-card)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', fontSize: '0.825rem' }}>
+              <p style={{ fontWeight: 700, marginBottom: '0.3rem', color: 'var(--text-main)' }}>
+                📱 Instruction pour iPhone / iPad (Safari) :
+              </p>
+              <ol style={{ paddingLeft: '1.2rem', color: 'var(--text-muted)' }}>
+                <li>Appuyez sur le bouton <strong>Partager</strong> <Share size={14} style={{ display: 'inline' }} /> en bas de Safari.</li>
+                <li>Sélectionnez <strong>Sur l'écran d'accueil</strong> ➕.</li>
+                <li>Validez avec <strong>Ajouter</strong> en haut à droite.</li>
+              </ol>
+            </div>
+          )}
+        </div>
+
         {/* Security PIN Code Section */}
       <div
         style={{
