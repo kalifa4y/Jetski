@@ -34,7 +34,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   useEffect(() => {
     if (editingTransaction) {
       setType(editingTransaction.type);
-      setAmount(editingTransaction.amount.toString());
+      setAmount(formatAmountInput(editingTransaction.amount.toString()));
       setSelectedCategory(editingTransaction.category);
       setDate(editingTransaction.date);
       setNote(editingTransaction.note || '');
@@ -61,13 +61,21 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     }
   };
 
+  const formatAmountInput = (val: string) => {
+    const rawValue = val.replace(/\s/g, '').replace(',', '.');
+    if (!rawValue) return '';
+    const parts = rawValue.split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    return parts.join('.');
+  };
+
   if (!isOpen) return null;
 
   const filteredCategories = categories.filter((c) => c.type === type || c.type === 'both');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const numAmount = parseFloat(amount);
+    const numAmount = parseFloat(amount.replace(/\s/g, '').replace(',', '.'));
     if (isNaN(numAmount) || numAmount <= 0) {
       alert('Veuillez entrer un montant valide supérieur à 0.');
       return;
@@ -103,8 +111,8 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   };
 
   const addPresetAmount = (value: number) => {
-    const current = parseFloat(amount) || 0;
-    setAmount((current + value).toString());
+    const current = parseFloat(amount.replace(/\s/g, '').replace(',', '.')) || 0;
+    setAmount(formatAmountInput((current + value).toString()));
   };
 
   return (
@@ -182,16 +190,18 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             <label className="form-label">Montant ({settings.currency}) *</label>
             <div style={{ position: 'relative' }}>
               <input
-                type="number"
-                step="any"
-                min="0"
+                type="text"
+                inputMode="numeric"
                 className="form-input form-input-amount"
                 placeholder="0"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/[^0-9.,\s]/g, '');
+                  setAmount(formatAmountInput(raw));
+                }}
                 autoFocus
                 required
-                style={{ textAlign: 'right', paddingLeft: '4rem' }}
+                style={{ textAlign: 'right', paddingLeft: '4rem', fontFamily: 'inherit', fontWeight: 'bold' }}
               />
               <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', fontWeight: 700, color: 'var(--text-light)', fontSize: '1rem' }}>
                 {settings.currencySymbol}
