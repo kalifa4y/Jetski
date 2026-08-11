@@ -131,7 +131,7 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-card" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3 className="modal-title">
             <Tag size={22} color="var(--primary-green)" /> Gestion des Catégories

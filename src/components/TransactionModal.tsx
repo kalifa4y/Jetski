@@ -109,7 +109,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-card" onClick={(e) => e.stopPropagation()}>
         {/* En-tête de la modale */}
         <div className="modal-header">
           <h3 className="modal-title" style={{ color: type === 'income' ? 'var(--income-color)' : 'var(--expense-color)' }}>
