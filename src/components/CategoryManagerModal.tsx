@@ -302,7 +302,8 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
             {editingCatId ? <Check size={18} /> : <Plus size={18} />}
             {editingCatId ? 'Enregistrer les modifications' : 'Ajouter cette catégorie'}
           </button>
-        </form>
+          </form>
+        )}
 
         {/* Filtrage & Liste des catégories */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
