@@ -66,7 +66,7 @@ export const Settings: React.FC<SettingsProps> = ({
         } else {
           alert('Fichier de sauvegarde invalide.');
         }
-      } catch (err) {
+      } catch {
         alert('Erreur lors du traitement du fichier JSON.');
       }
     };
@@ -217,8 +217,9 @@ export const Settings: React.FC<SettingsProps> = ({
         </div>
 
         <div className="form-group">
-          <label className="form-label">Devise principale</label>
+          <label htmlFor="currency-select" className="form-label">Devise principale</label>
           <select
+            id="currency-select"
             className="form-select"
             value={currency}
             onChange={(e) => setCurrency(e.target.value)}

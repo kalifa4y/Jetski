@@ -149,8 +149,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ settings, onCo
               </div>
 
               <div className="form-group">
-                <label className="form-label">Devise de l'application</label>
-                <select className="form-select" value={currency} onChange={(e) => setCurrency(e.target.value)}>
+                <label htmlFor="onboarding-currency" className="form-label">Devise de l'application</label>
+                <select id="onboarding-currency" className="form-select" value={currency} onChange={(e) => setCurrency(e.target.value)}>
                   {CURRENCIES.map((c) => (
                     <option key={c.code} value={c.code}>
                       {c.label}

@@ -73,7 +73,6 @@ function createLogoPngBuffer(width, height) {
   const cy = height / 2;
   const outerR = width * 0.44;
   const innerR = width * 0.22;
-  const notchR = width * 0.30;
 
   for (let y = 0; y < height; y++) {
     const rowOffset = y * (1 + width * 4);

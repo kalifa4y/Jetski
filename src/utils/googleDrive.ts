@@ -53,7 +53,7 @@ export const parseJwt = (token: string) => {
         .join('')
     );
     return JSON.parse(jsonPayload);
-  } catch (e) {
+  } catch {
     return null;
   }
 };
@@ -91,7 +91,7 @@ export const requestGoogleToken = (
                 });
                 return;
               }
-            } catch (e) {
+            } catch {
               // Ignore fallback
             }
             onTokenReceived(response.access_token);

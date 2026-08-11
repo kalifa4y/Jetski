@@ -86,7 +86,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           spread: 70,
           origin: { y: 0.6 },
         });
-      } catch (err) {
+      } catch {
         // Ignorer si indisponible
       }
     }

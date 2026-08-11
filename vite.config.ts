@@ -4,6 +4,9 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   base: './',
+  build: {
+    chunkSizeWarningLimit: 1000,
+  },
   plugins: [
     react(),
     VitePWA({
@@ -18,7 +21,7 @@ export default defineConfig({
         theme_color: '#5ebc67',
         background_color: '#ffffff',
         display: 'standalone',
-        orientation: 'any',
+        orientation: 'portrait',
         scope: './',
         start_url: './',
         icons: [

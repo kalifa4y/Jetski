@@ -113,8 +113,9 @@ export const RevenueStats: React.FC<RevenueStatsProps> = ({ transactions, catego
       {/* Si mode Mois, filtre d'année disponible */}
       {mode === 'month' && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: '1rem', gap: '0.5rem' }}>
-          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>Année :</span>
+          <label htmlFor="year-filter" style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>Année :</label>
           <select
+            id="year-filter"
             className="form-select"
             style={{ width: 'auto', padding: '0.4rem 0.8rem', fontSize: '0.9rem' }}
             value={selectedYear}

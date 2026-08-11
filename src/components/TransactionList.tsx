@@ -145,10 +145,11 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       {/* Filtre par Catégorie & Filtre Période */}
       <div className="filters-select-grid">
         <div>
-          <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.2rem', marginBottom: '0.2rem' }}>
+          <label htmlFor="category-filter" style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.2rem', marginBottom: '0.2rem' }}>
             <Tag size={12} /> Catégorie :
           </label>
           <select
+            id="category-filter"
             className="form-select"
             style={{ padding: '0.4rem 0.6rem', fontSize: '0.825rem' }}
             value={categoryFilter}
@@ -164,10 +165,11 @@ export const TransactionList: React.FC<TransactionListProps> = ({
         </div>
 
         <div>
-          <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.2rem' }}>
+          <label htmlFor="period-filter" style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.2rem' }}>
             Période :
           </label>
           <select
+            id="period-filter"
             className="form-select"
             style={{ padding: '0.4rem 0.6rem', fontSize: '0.825rem' }}
             value={periodFilter}
