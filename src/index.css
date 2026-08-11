@@ -130,13 +130,42 @@ button, input, select, textarea {
 }
 
 .app-container {
-  max-width: 600px;
+  max-width: 640px;
   margin: 0 auto;
   width: 100%;
-  padding-bottom: 90px;
+  padding-bottom: 95px;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .app-container {
+    max-width: 768px;
+    padding-bottom: 105px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .app-container {
+    max-width: 860px;
+  }
+}
+
+/* Custom Scrollbar for Desktop PC Browsers */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-app);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-green);
 }
 
 .top-header-banner {
@@ -1267,6 +1296,26 @@ button, input, select, textarea {
 
 .nav-item.active svg {
   transform: translateY(-1px);
+}
+
+/* PC Desktop Mouse Hover Interactions */
+@media (hover: hover) {
+  .nav-item:hover {
+    color: var(--primary-green);
+    background: rgba(94, 188, 103, 0.08);
+  }
+  .action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  }
+  .period-tile-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+  }
+  .transaction-card:hover {
+    border-color: var(--primary-green);
+    transform: translateX(3px);
+  }
 }
 
 .categories-grid {
