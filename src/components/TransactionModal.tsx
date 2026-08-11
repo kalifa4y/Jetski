@@ -151,7 +151,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 }}
                 onClick={() => handleTypeChange('income')}
               >
-                <Plus size={18} /> + REVENU
+                <Plus size={18} /> REVENU
               </button>
               <button
                 type="button"
@@ -172,7 +172,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 }}
                 onClick={() => handleTypeChange('expense')}
               >
-                <Minus size={18} /> - DÉPENSE
+                <Minus size={18} /> DÉPENSE
               </button>
             </div>
           </div>
@@ -191,6 +191,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 onChange={(e) => setAmount(e.target.value)}
                 autoFocus
                 required
+                style={{ textAlign: 'right', paddingLeft: '4rem' }}
               />
               <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', fontWeight: 700, color: 'var(--text-light)', fontSize: '1rem' }}>
                 {settings.currencySymbol}
