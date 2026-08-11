@@ -75,6 +75,8 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
   const [color, setColor] = useState('#5ebc67');
   const [icon, setIcon] = useState('Briefcase');
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
+  const [showForm, setShowForm] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
 
   if (!isOpen) return null;
 
@@ -84,11 +86,13 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
     setType(cat.type === 'both' ? 'income' : cat.type);
     setColor(cat.color);
     setIcon(cat.icon);
+    setShowForm(true);
   };
 
   const handleCancelEdit = () => {
     setEditingCatId(null);
     setName('');
+    setShowForm(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -110,6 +114,7 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
         });
       }
       setEditingCatId(null);
+      setSuccessMsg('Catégorie modifiée avec succès !');
     } else {
       onAddCategory({
         name: name.trim(),
@@ -118,9 +123,12 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
         icon,
         isCustom: true,
       });
+      setSuccessMsg('Catégorie ajoutée avec succès !');
     }
 
     setName('');
+    setShowForm(false);
+    setTimeout(() => setSuccessMsg(''), 3000);
   };
 
   const filteredCategories = categories.filter((c) => {
@@ -141,28 +149,60 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
           </button>
         </div>
 
-        {/* Formulaire de création / édition de catégorie */}
-        <form
-          onSubmit={handleSubmit}
-          style={{
-            background: 'var(--bg-card-subtle)',
-            padding: '1.25rem',
-            borderRadius: 'var(--radius-md)',
-            marginBottom: '1.25rem',
-            border: '1.5px solid var(--border-color)',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              {editingCatId ? <Edit2 size={18} color="var(--primary-green)" /> : <Plus size={18} color="var(--primary-green)" />}
-              {editingCatId ? 'Modifier la catégorie' : 'Créer une catégorie'}
-            </h4>
-            {editingCatId && (
-              <button type="button" className="btn btn-secondary btn-sm" onClick={handleCancelEdit}>
-                Annuler l'édition
-              </button>
-            )}
+        {successMsg && (
+          <div style={{
+            position: 'fixed',
+            top: '30px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'var(--primary-green)',
+            color: 'white',
+            padding: '0.8rem 1.5rem',
+            borderRadius: 'var(--radius-full)',
+            zIndex: 9999,
+            fontWeight: 700,
+            boxShadow: '0 10px 25px rgba(94, 188, 103, 0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            animation: 'slideUp 0.3s ease-out'
+          }}>
+            <Check size={20} />
+            {successMsg}
           </div>
+        )}
+
+        {!showForm && !editingCatId && (
+          <button 
+            type="button"
+            className="btn btn-primary btn-block" 
+            onClick={() => setShowForm(true)} 
+            style={{ marginBottom: '1.25rem' }}
+          >
+            <Plus size={18} /> Créer une nouvelle catégorie
+          </button>
+        )}
+
+        {(showForm || editingCatId) && (
+          <form
+            onSubmit={handleSubmit}
+            style={{
+              background: 'var(--bg-card-subtle)',
+              padding: '1.25rem',
+              borderRadius: 'var(--radius-md)',
+              marginBottom: '1.25rem',
+              border: '1.5px solid var(--border-color)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                {editingCatId ? <Edit2 size={18} color="var(--primary-green)" /> : <Plus size={18} color="var(--primary-green)" />}
+                {editingCatId ? 'Modifier la catégorie' : 'Créer une catégorie'}
+              </h4>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={handleCancelEdit}>
+                {editingCatId ? "Annuler l'édition" : "Annuler"}
+              </button>
+            </div>
 
           <div className="form-group">
             <label className="form-label">Nom de la catégorie</label>
