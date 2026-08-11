@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import type { Settings as SettingsType, Transaction, Category } from '../types/finance';
 import { CURRENCIES } from '../utils/constants';
 import { exportToCSV, exportBackupJSON } from '../utils/storage';
-import { Settings as SettingsIcon, Download, Upload, Sun, Moon, ShieldAlert, Check, Tag } from 'lucide-react';
+import { PinLockScreen } from './PinLockScreen';
+import { Settings as SettingsIcon, Download, Upload, Sun, Moon, ShieldAlert, Check, Tag, ShieldCheck, KeyRound } from 'lucide-react';
 
 interface SettingsProps {
   settings: SettingsType;
@@ -23,11 +24,16 @@ export const Settings: React.FC<SettingsProps> = ({
   onClearData,
   onImportBackup,
 }) => {
-  const [businessName, setBusinessName] = useState(settings.businessName);
-  const [ownerName, setOwnerName] = useState(settings.ownerName);
+  const [businessName, setBusinessName] = useState(settings.businessName || 'Mon Budget');
+  const [ownerName, setOwnerName] = useState(settings.ownerName || 'Utilisateur');
+  const [userEmail, setUserEmail] = useState(settings.userEmail || '');
   const [currency, setCurrency] = useState(settings.currency);
   const [theme, setTheme] = useState(settings.theme);
+  const [isPinEnabled, setIsPinEnabled] = useState<boolean>(!!settings.isPinEnabled);
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  // Modal de changement de PIN
+  const [isPinModalOpen, setIsPinModalOpen] = useState<boolean>(false);
 
   const handleSaveGeneral = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,8 +42,10 @@ export const Settings: React.FC<SettingsProps> = ({
       ...settings,
       businessName,
       ownerName,
+      userEmail,
       currency: selectedCurr.code,
       currencySymbol: selectedCurr.symbol,
+      isPinEnabled,
       theme,
     });
     setSavedSuccess(true);
@@ -69,19 +77,70 @@ export const Settings: React.FC<SettingsProps> = ({
     <div style={{ padding: '0 1rem 2rem' }}>
       <div style={{ marginTop: '1rem', marginBottom: '1.25rem' }}>
         <h2 style={{ fontSize: '1.4rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <SettingsIcon size={26} color="var(--primary)" />
+          <SettingsIcon size={26} color="var(--primary-green)" />
           Options & Paramètres
         </h2>
         <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-          Personnalisez la monnaie, vos catégories et sauvegardez vos données.
+          Personnalisez la sécurité, vos plafonds de budget et vos données.
         </p>
       </div>
 
-      {/* Section Catégories sur-mesure */}
+      {/* Security PIN Code Section */}
       <div
         style={{
-          background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
-          border: '1px solid #bfdbfe',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-color)',
+          borderRadius: 'var(--radius-lg)',
+          padding: '1.25rem',
+          marginBottom: '1.25rem',
+          boxShadow: 'var(--shadow-sm)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <div style={{ padding: '0.5rem', borderRadius: '50%', background: 'var(--green-bg)' }}>
+              <ShieldCheck size={24} color="var(--primary-green)" />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700 }}>Sécurité Code PIN</h3>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                {isPinEnabled ? 'Code PIN activé à l’ouverture' : 'Application non verrouillée'}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            className={`btn-pill-sm ${isPinEnabled ? 'active-add' : ''}`}
+            onClick={() => {
+              if (!isPinEnabled && !settings.pinCode) {
+                setIsPinModalOpen(true);
+              } else {
+                const nextVal = !isPinEnabled;
+                setIsPinEnabled(nextVal);
+                onUpdateSettings({ ...settings, isPinEnabled: nextVal });
+              }
+            }}
+          >
+            {isPinEnabled ? 'Activé' : 'Désactivé'}
+          </button>
+        </div>
+
+        {isPinEnabled && (
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm btn-block"
+            onClick={() => setIsPinModalOpen(true)}
+          >
+            <KeyRound size={16} /> Modifier mon Code PIN
+          </button>
+        )}
+      </div>
+
+      {/* Section Catégories */}
+      <div
+        style={{
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-color)',
           borderRadius: 'var(--radius-lg)',
           padding: '1.25rem',
           marginBottom: '1.25rem',
@@ -90,26 +149,16 @@ export const Settings: React.FC<SettingsProps> = ({
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--primary-hover)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Tag size={20} /> Catégories d'Opérations
+            <h3 style={{ fontSize: '1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Tag size={20} color="var(--primary-green)" /> Catégories d'Opérations
             </h3>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-              Créez des catégories sur-mesure (Vente de jus, Glaces...).
+              Personnalisez vos catégories de revenus et de dépenses.
             </p>
           </div>
           <button
             type="button"
-            style={{
-              padding: '0.65rem 1rem',
-              background: 'var(--primary)',
-              color: 'white',
-              border: 'none',
-              borderRadius: 'var(--radius-md)',
-              fontWeight: 700,
-              fontSize: '0.85rem',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-            }}
+            className="btn btn-primary btn-sm"
             onClick={onOpenCategoryManager}
           >
             Gérer ({categories.length})
@@ -117,7 +166,7 @@ export const Settings: React.FC<SettingsProps> = ({
         </div>
       </div>
 
-      {/* Profil et Devise */}
+      {/* Profil, Devise & Plafond */}
       <form
         onSubmit={handleSaveGeneral}
         style={{
@@ -130,28 +179,39 @@ export const Settings: React.FC<SettingsProps> = ({
         }}
       >
         <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--text-main)' }}>
-          Profil & Devise
+          Profil & Préférences
         </h3>
 
         <div className="form-group">
-          <label className="form-label">Nom de l'Activité / Commerce</label>
+          <label className="form-label">Titre du Compte / Commerce</label>
           <input
             type="text"
             className="form-input"
             value={businessName}
             onChange={(e) => setBusinessName(e.target.value)}
-            placeholder="ex: Les Glaces de Maman"
+            placeholder="ex: Mon Budget Personnel"
           />
         </div>
 
         <div className="form-group">
-          <label className="form-label">Prénom ou Titre</label>
+          <label className="form-label">Prénom ou Pseudo</label>
           <input
             type="text"
             className="form-input"
             value={ownerName}
             onChange={(e) => setOwnerName(e.target.value)}
-            placeholder="ex: Maman"
+            placeholder="ex: Alex"
+          />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Adresse Email (Optionnelle)</label>
+          <input
+            type="email"
+            className="form-input"
+            value={userEmail}
+            onChange={(e) => setUserEmail(e.target.value)}
+            placeholder="ex: alex@email.com"
           />
         </div>
 
@@ -194,24 +254,7 @@ export const Settings: React.FC<SettingsProps> = ({
           </div>
         </div>
 
-        <button
-          type="submit"
-          style={{
-            width: '100%',
-            padding: '0.85rem',
-            background: 'var(--primary)',
-            color: 'white',
-            border: 'none',
-            borderRadius: 'var(--radius-md)',
-            fontWeight: 700,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.4rem',
-            marginTop: '0.5rem',
-          }}
-        >
+        <button type="submit" className="btn btn-primary btn-block" style={{ marginTop: '0.5rem' }}>
           {savedSuccess ? <Check size={20} /> : null}
           {savedSuccess ? 'Modifications enregistrées !' : 'Sauvegarder les préférences'}
         </button>
@@ -238,65 +281,23 @@ export const Settings: React.FC<SettingsProps> = ({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <button
             type="button"
-            style={{
-              padding: '0.85rem 1rem',
-              background: 'var(--bg-card-subtle)',
-              border: '1px solid var(--border-color)',
-              borderRadius: 'var(--radius-md)',
-              color: 'var(--text-main)',
-              fontWeight: 700,
-              fontSize: '0.9rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-            }}
+            className="btn btn-secondary btn-block"
             onClick={() => exportToCSV(transactions, settings.currency)}
           >
-            <Download size={18} color="var(--income-color)" />
+            <Download size={18} color="var(--primary-green)" />
             Exporter l'Historique en Excel / CSV
           </button>
 
           <button
             type="button"
-            style={{
-              padding: '0.85rem 1rem',
-              background: 'var(--bg-card-subtle)',
-              border: '1px solid var(--border-color)',
-              borderRadius: 'var(--radius-md)',
-              color: 'var(--text-main)',
-              fontWeight: 700,
-              fontSize: '0.9rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-            }}
+            className="btn btn-secondary btn-block"
             onClick={() => exportBackupJSON(transactions, settings, categories)}
           >
-            <Download size={18} color="var(--primary)" />
-            Télécharger un fichier de Sauvegarde JSON
+            <Download size={18} color="var(--primary-green)" />
+            Télécharger une Sauvegarde JSON Complète
           </button>
 
-          <label
-            style={{
-              padding: '0.85rem 1rem',
-              background: 'var(--bg-card-subtle)',
-              border: '1px dashed var(--border-strong)',
-              borderRadius: 'var(--radius-md)',
-              color: 'var(--text-main)',
-              fontWeight: 700,
-              fontSize: '0.9rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-              textAlign: 'center',
-            }}
-          >
+          <label className="btn btn-secondary btn-block" style={{ cursor: 'pointer' }}>
             <Upload size={18} color="var(--text-muted)" />
             Restaurer depuis un fichier JSON
             <input type="file" accept=".json" onChange={handleFileUpload} style={{ display: 'none' }} />
@@ -308,28 +309,24 @@ export const Settings: React.FC<SettingsProps> = ({
       <div
         style={{
           background: 'var(--bg-card)',
-          border: '1px solid var(--expense-border)',
+          border: '1px solid var(--red-border)',
           borderRadius: 'var(--radius-lg)',
           padding: '1.25rem',
           boxShadow: 'var(--shadow-sm)',
         }}
       >
-        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--expense-color)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--danger-red)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
           <ShieldAlert size={18} /> Zone de Réinitialisation
         </h3>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
           <button
             type="button"
+            className="btn btn-block"
             style={{
-              padding: '0.75rem',
-              background: 'var(--expense-bg)',
-              border: '1px solid var(--expense-border)',
-              borderRadius: 'var(--radius-md)',
-              color: 'var(--expense-color)',
-              fontWeight: 700,
-              fontSize: '0.85rem',
-              cursor: 'pointer',
+              background: 'var(--red-bg)',
+              color: 'var(--danger-red)',
+              border: '1px solid var(--red-border)',
             }}
             onClick={() => {
               if (window.confirm('ATTENTION: Cela effacera toutes les transactions enregistrées. Voulez-vous continuer ?')) {
@@ -341,6 +338,22 @@ export const Settings: React.FC<SettingsProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Modal de définition / modification de PIN */}
+      {isPinModalOpen && (
+        <PinLockScreen
+          settings={settings}
+          mode="set"
+          onSetPin={(newPin) => {
+            setIsPinEnabled(true);
+            onUpdateSettings({ ...settings, isPinEnabled: true, pinCode: newPin });
+            setIsPinModalOpen(false);
+          }}
+          onSuccess={() => setIsPinModalOpen(false)}
+          onCancel={() => setIsPinModalOpen(false)}
+        />
+      )}
     </div>
   );
 };
+

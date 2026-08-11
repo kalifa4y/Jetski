@@ -1,50 +1,64 @@
 import React, { useState } from 'react';
 import type { Category, TransactionType } from '../types/finance';
 import { CategoryIcon } from './CategoryIcon';
-import { X, Plus, Trash2, Tag, Palette } from 'lucide-react';
+import { X, Plus, Trash2, Edit2, Tag, Palette, Check } from 'lucide-react';
 
 interface CategoryManagerModalProps {
   isOpen: boolean;
   onClose: () => void;
   categories: Category[];
   onAddCategory: (category: Omit<Category, 'id'>) => void;
+  onUpdateCategory: (category: Category) => void;
   onDeleteCategory: (id: string) => void;
 }
 
 const PRESET_ICONS = [
+  'Briefcase',
+  'Laptop',
   'ShoppingBag',
+  'HeartHandshake',
   'Gift',
-  'Truck',
-  'Package',
-  'Box',
-  'Zap',
+  'PlusCircle',
+  'ShoppingCart',
+  'Home',
   'Car',
+  'Zap',
+  'Tv',
+  'Coffee',
+  'Activity',
+  'Tag',
+  'Package',
+  'MinusCircle',
+  'Truck',
+  'Box',
   'FileText',
   'UserCheck',
-  'Coffee',
   'Utensils',
   'Store',
   'Heart',
   'Smile',
-  'Briefcase',
   'DollarSign',
   'Sparkles',
   'Layers',
 ];
 
 const PRESET_COLORS = [
-  '#16a34a',
-  '#0d9488',
-  '#2563eb',
-  '#059669',
+  '#5ebc67',
+  '#34a84d',
+  '#2a8f40',
+  '#14b8a6',
+  '#3b82f6',
+  '#6366f1',
+  '#ef4444',
   '#dc2626',
-  '#ea580c',
-  '#ca8a04',
-  '#7c3aed',
-  '#e11d48',
-  '#9333ea',
-  '#0284c7',
-  '#475569',
+  '#f59e0b',
+  '#eab308',
+  '#8b5cf6',
+  '#ec4899',
+  '#06b6d4',
+  '#f97316',
+  '#b91c1c',
+  '#64748b',
 ];
 
 export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
@@ -52,14 +66,30 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
   onClose,
   categories,
   onAddCategory,
+  onUpdateCategory,
   onDeleteCategory,
 }) => {
+  const [editingCatId, setEditingCatId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [type, setType] = useState<TransactionType>('income');
-  const [color, setColor] = useState('#16a34a');
-  const [icon, setIcon] = useState('ShoppingBag');
+  const [color, setColor] = useState('#5ebc67');
+  const [icon, setIcon] = useState('Briefcase');
+  const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
 
   if (!isOpen) return null;
+
+  const handleStartEdit = (cat: Category) => {
+    setEditingCatId(cat.id);
+    setName(cat.name);
+    setType(cat.type === 'both' ? 'income' : cat.type);
+    setColor(cat.color);
+    setIcon(cat.icon);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCatId(null);
+    setName('');
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,50 +98,78 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
       return;
     }
 
-    onAddCategory({
-      name: name.trim(),
-      type,
-      color,
-      icon,
-      isCustom: true,
-    });
+    if (editingCatId) {
+      const existing = categories.find((c) => c.id === editingCatId);
+      if (existing) {
+        onUpdateCategory({
+          ...existing,
+          name: name.trim(),
+          type,
+          color,
+          icon,
+        });
+      }
+      setEditingCatId(null);
+    } else {
+      onAddCategory({
+        name: name.trim(),
+        type,
+        color,
+        icon,
+        isCustom: true,
+      });
+    }
 
     setName('');
   };
+
+  const filteredCategories = categories.filter((c) => {
+    if (filterType === 'income') return c.type === 'income' || c.type === 'both';
+    if (filterType === 'expense') return c.type === 'expense' || c.type === 'both';
+    return true;
+  });
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3 className="modal-title">
-            <Tag size={22} color="var(--primary)" /> Gestion des Catégories
+            <Tag size={22} color="var(--primary-green)" /> Gestion des Catégories
           </h3>
           <button className="close-btn" onClick={onClose} aria-label="Fermer">
             <X size={20} />
           </button>
         </div>
 
-        {/* Formulaire de création de catégorie */}
+        {/* Formulaire de création / édition de catégorie */}
         <form
           onSubmit={handleSubmit}
           style={{
             background: 'var(--bg-card-subtle)',
-            padding: '1rem',
+            padding: '1.25rem',
             borderRadius: 'var(--radius-md)',
             marginBottom: '1.25rem',
-            border: '1px solid var(--border-color)',
+            border: '1.5px solid var(--border-color)',
           }}
         >
-          <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <Plus size={18} color="var(--primary)" /> Ajouter une nouvelle catégorie
-          </h4>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              {editingCatId ? <Edit2 size={18} color="var(--primary-green)" /> : <Plus size={18} color="var(--primary-green)" />}
+              {editingCatId ? 'Modifier la catégorie' : 'Créer une catégorie'}
+            </h4>
+            {editingCatId && (
+              <button type="button" className="btn btn-secondary btn-sm" onClick={handleCancelEdit}>
+                Annuler l'édition
+              </button>
+            )}
+          </div>
 
           <div className="form-group">
             <label className="form-label">Nom de la catégorie</label>
             <input
               type="text"
               className="form-input"
-              placeholder="ex: Vente de Jus, Emballages spéciaux..."
+              placeholder="ex: Alimentation, Transports, Vente de Jus..."
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -153,14 +211,14 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
             <label className="form-label">
               <Palette size={14} style={{ display: 'inline', marginRight: '0.2rem' }} /> Couleur
             </label>
-            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap' }}>
               {PRESET_COLORS.map((c) => (
                 <button
                   key={c}
                   type="button"
                   style={{
-                    width: '30px',
-                    height: '30px',
+                    width: '32px',
+                    height: '32px',
                     borderRadius: '50%',
                     background: c,
                     border: color === c ? '3px solid var(--text-main)' : 'none',
@@ -175,18 +233,18 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
           {/* Choix de l'icône */}
           <div className="form-group">
             <label className="form-label">Icône</label>
-            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', maxHeight: '100px', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', maxHeight: '110px', overflowY: 'auto' }}>
               {PRESET_ICONS.map((ic) => (
                 <button
                   key={ic}
                   type="button"
                   style={{
-                    width: '36px',
-                    height: '36px',
+                    width: '38px',
+                    height: '38px',
                     borderRadius: 'var(--radius-sm)',
-                    background: icon === ic ? 'var(--primary-bg)' : 'var(--bg-card)',
-                    border: icon === ic ? '2px solid var(--primary)' : '1px solid var(--border-color)',
-                    color: icon === ic ? 'var(--primary)' : 'var(--text-main)',
+                    background: icon === ic ? 'var(--green-bg)' : 'var(--bg-card)',
+                    border: icon === ic ? '2px solid var(--primary-green)' : '1px solid var(--border-color)',
+                    color: icon === ic ? 'var(--primary-green)' : 'var(--text-main)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -200,71 +258,94 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
             </div>
           </div>
 
-          <button
-            type="submit"
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              background: 'var(--primary)',
-              color: 'white',
-              border: 'none',
-              borderRadius: 'var(--radius-md)',
-              fontWeight: 700,
-              cursor: 'pointer',
-              marginTop: '0.5rem',
-            }}
-          >
-            Créer cette catégorie
+          <button type="submit" className="btn btn-primary btn-block" style={{ marginTop: '0.5rem' }}>
+            {editingCatId ? <Check size={18} /> : <Plus size={18} />}
+            {editingCatId ? 'Enregistrer les modifications' : 'Ajouter cette catégorie'}
           </button>
         </form>
 
-        {/* Liste des catégories existantes */}
-        <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.75rem' }}>
-          Toutes les catégories disponibles ({categories.length})
-        </h4>
+        {/* Filtrage & Liste des catégories */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+          <h4 style={{ fontSize: '0.95rem', fontWeight: 700 }}>
+            Catégories ({filteredCategories.length})
+          </h4>
+          <div className="period-tabs" style={{ marginBottom: 0 }}>
+            <button
+              type="button"
+              className={`period-tab ${filterType === 'all' ? 'active' : ''}`}
+              style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem' }}
+              onClick={() => setFilterType('all')}
+            >
+              Toutes
+            </button>
+            <button
+              type="button"
+              className={`period-tab ${filterType === 'income' ? 'active' : ''}`}
+              style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem' }}
+              onClick={() => setFilterType('income')}
+            >
+              Revenus
+            </button>
+            <button
+              type="button"
+              className={`period-tab ${filterType === 'expense' ? 'active' : ''}`}
+              style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem' }}
+              onClick={() => setFilterType('expense')}
+            >
+              Dépenses
+            </button>
+          </div>
+        </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '250px', overflowY: 'auto' }}>
-          {categories.map((cat) => (
+          {filteredCategories.map((cat) => (
             <div
               key={cat.id}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '0.65rem 0.85rem',
+                padding: '0.75rem 0.85rem',
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border-color)',
                 borderRadius: 'var(--radius-md)',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <div
                   style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    background: cat.color,
-                    color: 'white',
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: 'var(--radius-sm)',
+                    background: `${cat.color}18`,
+                    color: cat.color,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
                 >
-                  <CategoryIcon name={cat.icon} size={16} />
+                  <CategoryIcon name={cat.icon} size={20} />
                 </div>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{cat.name}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-light)' }}>
-                    {cat.type === 'income' ? 'Revenu' : cat.type === 'expense' ? 'Dépense' : 'Les deux'}
-                    {cat.isCustom && ' • Personnalisée'}
+                  <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{cat.name}</div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-light)' }}>
+                    {cat.type === 'income' ? 'Revenu' : cat.type === 'expense' ? 'Dépense' : 'Tous types'}
                   </div>
                 </div>
               </div>
 
-              {cat.isCustom && (
+              <div style={{ display: 'flex', gap: '0.35rem' }}>
                 <button
                   type="button"
-                  style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.3rem' }}
+                  className="tx-action-btn"
+                  onClick={() => handleStartEdit(cat)}
+                  title="Éditer la catégorie"
+                >
+                  <Edit2 size={16} color="var(--primary-green)" />
+                </button>
+                <button
+                  type="button"
+                  className="tx-action-btn"
                   onClick={() => {
                     if (window.confirm(`Supprimer la catégorie "${cat.name}" ?`)) {
                       onDeleteCategory(cat.id);
@@ -272,9 +353,9 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
                   }}
                   title="Supprimer la catégorie"
                 >
-                  <Trash2 size={18} />
+                  <Trash2 size={16} color="var(--danger-red)" />
                 </button>
-              )}
+              </div>
             </div>
           ))}
         </div>

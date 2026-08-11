@@ -1,14 +1,14 @@
 import type { Transaction, Settings, Category } from '../types/finance';
 import { DEFAULT_SETTINGS, DEFAULT_CATEGORIES } from './constants';
 
-const TRANSACTIONS_KEY = 'maman_glaces_transactions_v1';
-const SETTINGS_KEY = 'maman_glaces_settings_v1';
-const CATEGORIES_KEY = 'maman_glaces_categories_v1';
+const TRANSACTIONS_KEY = 'nekawari_transactions_v2';
+const SETTINGS_KEY = 'nekawari_settings_v2';
+const CATEGORIES_KEY = 'nekawari_categories_v2';
 
 export const loadSettings = (): Settings => {
   try {
     const saved = localStorage.getItem(SETTINGS_KEY);
-    return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
+    return saved ? { ...DEFAULT_SETTINGS, ...JSON.parse(saved) } : DEFAULT_SETTINGS;
   } catch (e) {
     console.error('Erreur chargement paramètres', e);
     return DEFAULT_SETTINGS;
@@ -57,6 +57,13 @@ export const addCategory = (newCat: Omit<Category, 'id'>): Category[] => {
   return updated;
 };
 
+export const updateCategory = (updatedCat: Category): Category[] => {
+  const categories = loadCategories();
+  const updated = categories.map((c) => (c.id === updatedCat.id ? updatedCat : c));
+  saveCategories(updated);
+  return updated;
+};
+
 export const deleteCategory = (id: string): Category[] => {
   const categories = loadCategories();
   const updated = categories.filter((c) => c.id !== id);
@@ -65,13 +72,12 @@ export const deleteCategory = (id: string): Category[] => {
 };
 
 /**
- * Charge les transactions. Démarrage Vierge (sans données en dur par défaut).
+ * Charge les transactions.
  */
 export const loadTransactions = (): Transaction[] => {
   try {
     const saved = localStorage.getItem(TRANSACTIONS_KEY);
     if (!saved) {
-      // Démarrage totalement vierge sans données de démo en dur
       saveTransactions([]);
       return [];
     }
@@ -110,7 +116,7 @@ export const exportToCSV = (transactions: Transaction[], currency: string = 'FCF
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.setAttribute('href', url);
-  link.setAttribute('download', `nekawari_comptes_${new Date().toISOString().split('T')[0]}.csv`);
+  link.setAttribute('download', `nekawari_budget_${new Date().toISOString().split('T')[0]}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -119,9 +125,13 @@ export const exportToCSV = (transactions: Transaction[], currency: string = 'FCF
 /**
  * Exporter toutes les données (sauvegarde JSON complète)
  */
-export const exportBackupJSON = (transactions: Transaction[], settings: Settings, categories?: Category[]): void => {
+export const exportBackupJSON = (
+  transactions: Transaction[],
+  settings: Settings,
+  categories?: Category[]
+): void => {
   const data = {
-    version: 1,
+    version: 2,
     exportDate: new Date().toISOString(),
     settings,
     categories: categories || loadCategories(),
@@ -132,7 +142,7 @@ export const exportBackupJSON = (transactions: Transaction[], settings: Settings
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.setAttribute('href', url);
-  link.setAttribute('download', `nekawari_sauvegarde_${new Date().toISOString().split('T')[0]}.json`);
+  link.setAttribute('download', `nekawari_sauvegarde_complete_${new Date().toISOString().split('T')[0]}.json`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

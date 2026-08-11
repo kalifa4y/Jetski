@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import type { Transaction, Category, Settings, PeriodFilter } from '../types/finance';
 import { formatCurrency, formatDateFr } from '../utils/financeUtils';
 import { CategoryIcon } from './CategoryIcon';
-import { Search, Filter, Trash2, Edit2, History, ArrowDownRight, ArrowUpRight } from 'lucide-react';
+import { Search, Filter, Trash2, Edit2, History, ArrowDownRight, ArrowUpRight, Tag } from 'lucide-react';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -21,6 +21,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('all');
 
   const getCategoryDetails = (catId: string): Category => {
@@ -39,6 +40,9 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   const filtered = transactions.filter((tx) => {
     // Filtre type
     if (typeFilter !== 'all' && tx.type !== typeFilter) return false;
+
+    // Filtre catégorie spécifique
+    if (categoryFilter !== 'all' && tx.category !== categoryFilter) return false;
 
     // Filtre recherche textuelle
     if (searchTerm.trim() !== '') {
@@ -86,7 +90,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       {/* Titre et sous-titre */}
       <div className="section-header" style={{ marginTop: '1rem' }}>
         <h2 className="section-title" style={{ fontSize: '1.3rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <History size={24} color="var(--primary)" />
+          <History size={24} color="var(--primary-green)" />
           Historique des Opérations
         </h2>
         <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>
@@ -100,7 +104,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
           type="text"
           className="form-input"
           style={{ paddingLeft: '2.5rem', fontSize: '0.95rem' }}
-          placeholder="Rechercher une vente, un client, un achat..."
+          placeholder="Rechercher par libellé, catégorie ou montant..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -138,20 +142,43 @@ export const TransactionList: React.FC<TransactionListProps> = ({
         </button>
       </div>
 
-      {/* Filtre Période */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
-        <span style={{ fontSize: '0.825rem', color: 'var(--text-muted)', fontWeight: 600 }}>Période :</span>
-        <select
-          className="form-select"
-          style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem', width: 'auto' }}
-          value={periodFilter}
-          onChange={(e) => setPeriodFilter(e.target.value as PeriodFilter)}
-        >
-          <option value="all">Tout l'historique</option>
-          <option value="week">Cette semaine</option>
-          <option value="month">Ce mois-ci</option>
-          <option value="year">Cette année</option>
-        </select>
+      {/* Filtre par Catégorie & Filtre Période */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '1.25rem' }}>
+        <div>
+          <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.2rem', marginBottom: '0.2rem' }}>
+            <Tag size={12} /> Catégorie :
+          </label>
+          <select
+            className="form-select"
+            style={{ padding: '0.4rem 0.6rem', fontSize: '0.825rem' }}
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+          >
+            <option value="all">Toutes les catégories</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.2rem' }}>
+            Période :
+          </label>
+          <select
+            className="form-select"
+            style={{ padding: '0.4rem 0.6rem', fontSize: '0.825rem' }}
+            value={periodFilter}
+            onChange={(e) => setPeriodFilter(e.target.value as PeriodFilter)}
+          >
+            <option value="all">Tout l'historique</option>
+            <option value="week">Cette semaine</option>
+            <option value="month">Ce mois-ci</option>
+            <option value="year">Cette année</option>
+          </select>
+        </div>
       </div>
 
       {/* Liste des cartes de transaction */}
@@ -202,7 +229,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                     }}
                     title="Supprimer"
                     aria-label="Supprimer"
-                    style={{ color: '#ef4444' }}
+                    style={{ color: 'var(--danger-red)' }}
                   >
                     <Trash2 size={16} />
                   </button>

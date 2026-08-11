@@ -1,38 +1,76 @@
 import React, { useState } from 'react';
-import type { Transaction, Settings } from '../types/finance';
+import type { Transaction, Settings, Category } from '../types/finance';
 import {
   formatCurrency,
   getRevenueByWeekList,
   getRevenueByMonthList,
   getRevenueByYearList,
+  getCategoryBreakdown,
 } from '../utils/financeUtils';
-import { TrendingUp, Calendar } from 'lucide-react';
+import { CategoryIcon } from './CategoryIcon';
+import { TrendingUp, Calendar, CalendarRange, BarChart3, Tag, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 interface RevenueStatsProps {
   transactions: Transaction[];
+  categories: Category[];
   settings: Settings;
 }
 
 type ModeType = 'week' | 'month' | 'year';
 
-export const RevenueStats: React.FC<RevenueStatsProps> = ({ transactions, settings }) => {
+const PRESET_TILE_COLORS = [
+  '#5ebc67', // NekaWari Vert Vif
+  '#f43f5e', // Corail
+  '#f59e0b', // Ambre / Orange
+  '#5ebc67', // NekaWari Vert Vif
+  '#5ebc67', // NekaWari Vert Vif
+  '#5ebc67', // NekaWari Vert Vif
+  '#f59e0b', // Ambre
+  '#f43f5e', // Corail
+  '#5ebc67', // NekaWari Vert Vif
+  '#f43f5e', // Corail
+  '#f59e0b', // Ambre
+  '#5ebc67', // NekaWari Vert Vif
+];
+
+export const RevenueStats: React.FC<RevenueStatsProps> = ({ transactions, categories, settings }) => {
   const [mode, setMode] = useState<ModeType>('month');
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [categoryTypeTab, setCategoryTypeTab] = useState<'income' | 'expense'>('income');
 
   const weekList = getRevenueByWeekList(transactions, 10);
   const monthList = getRevenueByMonthList(transactions, selectedYear);
   const yearList = getRevenueByYearList(transactions);
 
-  const currentDataList =
+  const rawDataList =
     mode === 'week' ? weekList : mode === 'month' ? monthList : yearList;
+
+  // N'afficher que les mois, semaines ou années qui ont au moins une transaction enregistrée
+  const currentDataList = rawDataList.filter((item) => item.income > 0 || item.expense > 0);
 
   // Calcul du CA total de la sélection
   const totalIncomeSelected = currentDataList.reduce((acc, item) => acc + item.income, 0);
   const totalExpenseSelected = currentDataList.reduce((acc, item) => acc + item.expense, 0);
   const totalNetSelected = totalIncomeSelected - totalExpenseSelected;
 
-  // Recherche du CA maximum pour l'échelle des barres visuelles
-  const maxIncome = Math.max(...currentDataList.map((d) => d.income), 1);
+  // Breakdown par catégorie pour la liste filtrée
+  const incomeCategoryBreakdown = getCategoryBreakdown(transactions, 'income');
+  const expenseCategoryBreakdown = getCategoryBreakdown(transactions, 'expense');
+
+  const getCategoryDetails = (catId: string): Category => {
+    const found = categories.find((c) => c.id === catId);
+    if (found) return found;
+    return {
+      id: catId,
+      name: catId,
+      icon: 'CircleDollarSign',
+      color: '#64748b',
+      type: 'both',
+    };
+  };
+
+  const activeCategoryBreakdown =
+    categoryTypeTab === 'income' ? incomeCategoryBreakdown : expenseCategoryBreakdown;
 
   return (
     <div style={{ padding: '0 1rem' }}>
@@ -40,10 +78,10 @@ export const RevenueStats: React.FC<RevenueStatsProps> = ({ transactions, settin
       <div style={{ marginTop: '1rem', marginBottom: '1rem' }}>
         <h2 style={{ fontSize: '1.4rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <TrendingUp style={{ color: 'var(--income-color)' }} size={28} />
-          Chiffre d'Affaires (CA)
+          Chiffre d'Affaires & Bilan
         </h2>
         <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-          Suivi des ventes et recettes cumulées par période.
+          Suivi des recettes, des ventes et des résultats par période et catégorie.
         </p>
       </div>
 
@@ -53,19 +91,22 @@ export const RevenueStats: React.FC<RevenueStatsProps> = ({ transactions, settin
           className={`period-tab ${mode === 'week' ? 'active' : ''}`}
           onClick={() => setMode('week')}
         >
-          📅 Par Semaine
+          <Calendar size={14} style={{ display: 'inline', marginRight: '0.3rem', verticalAlign: 'middle' }} />
+          Par Semaine
         </button>
         <button
           className={`period-tab ${mode === 'month' ? 'active' : ''}`}
           onClick={() => setMode('month')}
         >
-          🗓️ Par Mois
+          <CalendarRange size={14} style={{ display: 'inline', marginRight: '0.3rem', verticalAlign: 'middle' }} />
+          Par Mois
         </button>
         <button
           className={`period-tab ${mode === 'year' ? 'active' : ''}`}
           onClick={() => setMode('year')}
         >
-          📊 Par Année
+          <BarChart3 size={14} style={{ display: 'inline', marginRight: '0.3rem', verticalAlign: 'middle' }} />
+          Par Année
         </button>
       </div>
 
@@ -91,12 +132,13 @@ export const RevenueStats: React.FC<RevenueStatsProps> = ({ transactions, settin
       {/* Résumé global du CA pour la période sélectionnée */}
       <div
         style={{
-          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+          background: 'linear-gradient(145deg, #000000 0%, #171717 60%, rgba(94, 188, 103, 0.2) 100%)',
           color: 'white',
           borderRadius: 'var(--radius-lg)',
           padding: '1.25rem',
           marginBottom: '1.25rem',
           boxShadow: 'var(--shadow-md)',
+          border: '1px solid rgba(94, 188, 103, 0.3)',
         }}
       >
         <div style={{ fontSize: '0.85rem', textTransform: 'uppercase', opacity: 0.9, fontWeight: 600 }}>
@@ -117,10 +159,77 @@ export const RevenueStats: React.FC<RevenueStatsProps> = ({ transactions, settin
         </div>
       </div>
 
-      {/* Liste détaillée des périodes avec barres visuelles */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '2rem' }}>
-        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.25rem' }}>
-          Détail par {mode === 'week' ? 'Semaine' : mode === 'month' ? 'Mois' : 'Année'}
+      {/* Section : Répartition du CA et des Dépenses par Catégorie (Grille 4 Colonnes comme le Dessin) */}
+      <div style={{ marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Tag size={20} color="var(--primary-green)" /> CA & Bilan par Catégorie
+          </h3>
+
+          <div style={{ display: 'flex', gap: '0.3rem' }}>
+            <button
+              type="button"
+              className={`period-tab ${categoryTypeTab === 'income' ? 'active' : ''}`}
+              style={{
+                padding: '0.35rem 0.65rem',
+                fontSize: '0.8rem',
+                color: categoryTypeTab === 'income' ? 'var(--income-color)' : undefined,
+              }}
+              onClick={() => setCategoryTypeTab('income')}
+            >
+              <ArrowUpRight size={14} style={{ display: 'inline', marginRight: '0.2rem' }} /> Revenus
+            </button>
+            <button
+              type="button"
+              className={`period-tab ${categoryTypeTab === 'expense' ? 'active' : ''}`}
+              style={{
+                padding: '0.35rem 0.65rem',
+                fontSize: '0.8rem',
+                color: categoryTypeTab === 'expense' ? 'var(--expense-color)' : undefined,
+              }}
+              onClick={() => setCategoryTypeTab('expense')}
+            >
+              <ArrowDownRight size={14} style={{ display: 'inline', marginRight: '0.2rem' }} /> Dépenses
+            </button>
+          </div>
+        </div>
+
+        {activeCategoryBreakdown.length === 0 ? (
+          <div className="empty-state">
+            <Tag size={36} color="var(--text-light)" />
+            <p>Aucune transaction de {categoryTypeTab === 'income' ? 'revenu' : 'dépense'} enregistrée.</p>
+          </div>
+        ) : (
+          /* Grille de Tuiles 4 Colonnes (Représentation exacte du croquis) */
+          <div className="category-tiles-grid">
+            {activeCategoryBreakdown.map((item) => {
+              const cat = getCategoryDetails(item.category);
+              return (
+                <div
+                  key={item.category}
+                  className="category-tile-card"
+                  style={{
+                    backgroundColor: cat.color,
+                  }}
+                >
+                  <div className="category-tile-icon">
+                    <CategoryIcon name={cat.icon} size={20} />
+                  </div>
+                  <div className="category-tile-name">{cat.name}</div>
+                  <div className="category-tile-amount">
+                    {categoryTypeTab === 'income' ? '+' : '-'} {formatCurrency(item.amount, settings.currency)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Grille 4 Colonnes pour Mois, Semaines et Années (Représentation exacte du dessin utilisateur Image 1) */}
+      <div style={{ marginBottom: '2.5rem' }}>
+        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <Calendar size={20} color="var(--primary-green)" /> Détail par {mode === 'week' ? 'Semaine' : mode === 'month' ? 'Mois' : 'Année'}
         </h3>
 
         {currentDataList.length === 0 ? (
@@ -129,59 +238,32 @@ export const RevenueStats: React.FC<RevenueStatsProps> = ({ transactions, settin
             <p>Aucune transaction enregistrée pour cette période.</p>
           </div>
         ) : (
-          currentDataList.map((item, idx) => {
-            const barWidthPercent = Math.min(Math.round((item.income / maxIncome) * 100), 100);
-
-            return (
-              <div
-                key={idx}
-                style={{
-                  background: 'var(--bg-card)',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: 'var(--radius-md)',
-                  padding: '1rem',
-                  boxShadow: 'var(--shadow-sm)',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>
-                      {item.periodLabel}
-                    </div>
-                    {item.dateRange !== item.periodLabel && (
-                      <div style={{ fontSize: '0.78rem', color: 'var(--text-light)' }}>
-                        {item.dateRange}
-                      </div>
-                    )}
+          <div className="period-tiles-grid">
+            {currentDataList.map((item, idx) => {
+              const cardBg = PRESET_TILE_COLORS[idx % PRESET_TILE_COLORS.length];
+              return (
+                <div
+                  key={idx}
+                  className="period-tile-card"
+                  style={{
+                    backgroundColor: cardBg,
+                  }}
+                >
+                  <div className="period-tile-title">
+                    {item.dateRange || item.periodLabel}
                   </div>
-
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontWeight: 800, fontSize: '1.15rem', color: 'var(--income-color)' }}>
-                      + {formatCurrency(item.income, settings.currency)}
-                    </div>
-                    {item.expense > 0 && (
-                      <div style={{ fontSize: '0.8rem', color: 'var(--expense-color)', fontWeight: 600 }}>
-                        - {formatCurrency(item.expense, settings.currency)} (Dépenses)
-                      </div>
-                    )}
+                  <div className="period-tile-income">
+                    + {formatCurrency(item.income, settings.currency)}
                   </div>
+                  {item.expense > 0 && (
+                    <div className="period-tile-expense">
+                      - {formatCurrency(item.expense, settings.currency)}
+                    </div>
+                  )}
                 </div>
-
-                {/* Jauge / Barre visuelle du CA */}
-                <div style={{ width: '100%', height: '8px', background: 'var(--bg-card-subtle)', borderRadius: '4px', overflow: 'hidden' }}>
-                  <div
-                    style={{
-                      width: `${barWidthPercent}%`,
-                      height: '100%',
-                      background: 'linear-gradient(90deg, #10b981 0%, #059669 100%)',
-                      borderRadius: '4px',
-                      transition: 'width 0.3s ease',
-                    }}
-                  />
-                </div>
-              </div>
-            );
-          })
+              );
+            })}
+          </div>
         )}
       </div>
     </div>

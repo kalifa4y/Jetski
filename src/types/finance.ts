@@ -21,14 +21,29 @@ export interface Transaction {
   createdAt: number;
 }
 
+export interface UserProfile {
+  name: string;
+  email: string;
+  avatar?: string;
+  isPinEnabled: boolean;
+  pinCode?: string; // Code à 4 chiffres
+  onboardingCompleted: boolean;
+  createdAt: number;
+}
+
 export interface Settings {
   currency: string;
   currencySymbol: string;
   businessName: string;
   ownerName: string;
+  userEmail?: string;
+  avatar?: string;
   theme: 'light' | 'dark';
   defaultPeriod: PeriodFilter;
   dailyGoal?: number;
+  isPinEnabled?: boolean;
+  pinCode?: string;
+  onboardingCompleted?: boolean;
 }
 
 export interface PeriodSummary {

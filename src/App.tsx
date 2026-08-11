@@ -7,6 +7,7 @@ import {
   saveSettings,
   loadCategories,
   addCategory as addCategoryStorage,
+  updateCategory as updateCategoryStorage,
   deleteCategory as deleteCategoryStorage,
 } from './utils/storage';
 
@@ -18,13 +19,19 @@ import { TransactionList } from './components/TransactionList';
 import { Settings } from './components/Settings';
 import { TransactionModal } from './components/TransactionModal';
 import { CategoryManagerModal } from './components/CategoryManagerModal';
-import { Download } from 'lucide-react';
+import { PinLockScreen } from './components/PinLockScreen';
+import { OnboardingModal } from './components/OnboardingModal';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [transactions, setTransactions] = useState<Transaction[]>(loadTransactions);
   const [settings, setSettings] = useState<SettingsType>(loadSettings);
   const [categories, setCategories] = useState<Category[]>(loadCategories);
+
+  // Verrouillage de sécurité PIN
+  const [isLocked, setIsLocked] = useState<boolean>(
+    !!(settings.onboardingCompleted && settings.isPinEnabled && settings.pinCode)
+  );
 
   // Modale d'ajout/édition de transaction
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -33,9 +40,6 @@ export const App: React.FC = () => {
 
   // Modale de gestion des catégories
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState<boolean>(false);
-
-  // Support PWA Installation Prompt
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', settings.theme || 'light');
@@ -46,30 +50,44 @@ export const App: React.FC = () => {
     saveTransactions(transactions);
   }, [transactions, categories]);
 
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e: any) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
+  const handleOnboardingComplete = (data: {
+    ownerName: string;
+    currency: string;
+    currencySymbol: string;
+    initialBalance: number;
+    pinCode: string;
+  }) => {
+    setSettings((prev) => ({
+      ...prev,
+      ownerName: data.ownerName,
+      currency: data.currency,
+      currencySymbol: data.currencySymbol,
+      pinCode: data.pinCode,
+      isPinEnabled: true,
+      onboardingCompleted: true,
+    }));
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
-  }, []);
-
-  const handleInstallPWA = () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then(() => {
-        setDeferredPrompt(null);
-      });
+    if (data.initialBalance > 0) {
+      const initialTx: Transaction = {
+        id: `tx-init-${Date.now()}`,
+        type: 'income',
+        amount: data.initialBalance,
+        category: categories[0]?.id || 'cat-1',
+        date: new Date().toISOString().split('T')[0],
+        note: 'Solde initial de départ',
+        createdAt: Date.now(),
+      };
+      setTransactions((prev) => [initialTx, ...prev]);
     }
   };
 
   const handleAddCategory = (newCat: Omit<Category, 'id'>) => {
     const updated = addCategoryStorage(newCat);
+    setCategories(updated);
+  };
+
+  const handleUpdateCategory = (cat: Category) => {
+    const updated = updateCategoryStorage(cat);
     setCategories(updated);
   };
 
@@ -115,56 +133,57 @@ export const App: React.FC = () => {
     alert('Toutes les transactions ont été effacées.');
   };
 
-  const handleImportBackup = (data: { settings?: SettingsType; transactions?: Transaction[]; categories?: Category[] }) => {
+  const handleImportBackup = (data: {
+    settings?: SettingsType;
+    transactions?: Transaction[];
+    categories?: Category[];
+  }) => {
     if (data.settings) setSettings(data.settings);
     if (data.transactions) setTransactions(data.transactions);
     if (data.categories) setCategories(data.categories);
   };
 
-  const todayFormatted = new Intl.DateTimeFormat('fr-FR', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  }).format(new Date());
+  const now = new Date();
+  const dayNumber = now.getDate();
+  const monthName = now.toLocaleDateString('fr-FR', { month: 'short' }).toUpperCase().replace('.', '');
+  const yearNumber = now.getFullYear();
 
   return (
     <div className="app-container">
-      {/* En-tête mobile native */}
-      <header className="app-header">
-        <div className="brand-info">
-          <div className="brand-icon" style={{ background: 'transparent', boxShadow: 'none', padding: 0, width: '42px', height: '42px' }}>
-            <img src="/logo.svg" alt="Logo NekaWari" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-          </div>
-          <div>
-            <div className="brand-title">{settings.businessName || 'NekaWari'}</div>
-            <div className="brand-subtitle" style={{ textTransform: 'capitalize' }}>
-              {todayFormatted}
-            </div>
-          </div>
+      {/* Écran de déverrouillage PIN si activé */}
+      {isLocked && (
+        <PinLockScreen
+          settings={settings}
+          mode="unlock"
+          onSuccess={() => setIsLocked(false)}
+        />
+      )}
+
+      {/* Assistant d'accueil Onboarding si première visite */}
+      {!settings.onboardingCompleted && (
+        <OnboardingModal
+          settings={settings}
+          onComplete={handleOnboardingComplete}
+        />
+      )}
+
+      {/* Logo et nom à gauche, date à droite */}
+      <div className="top-header-banner">
+        <div className="brand-header-left">
+          <h1 className="logo-text-brand">
+            <span className="logo-text-green">NekaWari</span>
+            <span className="logo-text-dot">.</span>
+          </h1>
         </div>
 
-        {/* Bouton Installer PWA si disponible */}
-        {deferredPrompt && (
-          <button
-            onClick={handleInstallPWA}
-            style={{
-              background: 'var(--primary-bg)',
-              color: 'var(--primary)',
-              border: '1px solid var(--primary)',
-              borderRadius: 'var(--radius-full)',
-              padding: '0.35rem 0.65rem',
-              fontSize: '0.78rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.25rem',
-            }}
-          >
-            <Download size={14} /> Installer
-          </button>
-        )}
-      </header>
+        <div className="side-large-date-badge">
+          <span className="big-day-number">{dayNumber}</span>
+          <div className="date-stack">
+            <span className="date-month-text">{monthName}</span>
+            <span className="date-weekday-text">{yearNumber}</span>
+          </div>
+        </div>
+      </div>
 
       {/* Vues principales de l'application */}
       <main style={{ flex: 1 }}>
@@ -180,7 +199,7 @@ export const App: React.FC = () => {
         )}
 
         {activeTab === 'revenue' && (
-          <RevenueStats transactions={transactions} settings={settings} />
+          <RevenueStats transactions={transactions} categories={categories} settings={settings} />
         )}
 
         {activeTab === 'history' && (
@@ -230,6 +249,7 @@ export const App: React.FC = () => {
         onClose={() => setIsCategoryManagerOpen(false)}
         categories={categories}
         onAddCategory={handleAddCategory}
+        onUpdateCategory={handleUpdateCategory}
         onDeleteCategory={handleDeleteCategory}
       />
     </div>

@@ -1,6 +1,6 @@
 {
-  "short_name": "NekaWari",
-  "name": "NekaWari - Gestion Financière & Chiffre d'Affaires",
+  "short_name": "NW.",
+  "name": "NekaWari. - Gestion Financière",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -14,8 +14,8 @@
     }
   ],
   "start_url": "/",
-  "background_color": "#f8fafc",
-  "theme_color": "#2563eb",
+  "background_color": "#ffffff",
+  "theme_color": "#5ebc67",
   "display": "standalone",
   "orientation": "portrait"
 }
