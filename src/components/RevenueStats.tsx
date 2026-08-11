@@ -144,10 +144,10 @@ export const RevenueStats: React.FC<RevenueStatsProps> = ({ transactions, catego
         <div style={{ fontSize: '0.85rem', textTransform: 'uppercase', opacity: 0.9, fontWeight: 600 }}>
           Chiffre d'Affaires Total ({mode === 'week' ? '10 dernières semaines' : mode === 'month' ? `Année ${selectedYear}` : 'Toutes les années'})
         </div>
-        <div style={{ fontSize: '2.2rem', fontWeight: 800, margin: '0.4rem 0' }}>
+        <div style={{ fontSize: 'clamp(1.6rem, 4.5vw, 2.4rem)', fontWeight: 800, margin: '0.4rem 0' }}>
           {formatCurrency(totalIncomeSelected, settings.currency)}
         </div>
-        <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.2)', fontSize: '0.875rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.2)', fontSize: '0.875rem' }}>
           <div>
             <span style={{ opacity: 0.8 }}>Total Dépenses : </span>
             <strong style={{ fontWeight: 700 }}>{formatCurrency(totalExpenseSelected, settings.currency)}</strong>

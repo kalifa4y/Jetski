@@ -116,7 +116,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       </div>
 
       {/* Boutons de filtres Type (Tout / Revenus / Dépenses) */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', overflowX: 'auto' }}>
+      <div className="type-filters-row">
         <button
           className={`period-tab ${typeFilter === 'all' ? 'active' : ''}`}
           style={{ padding: '0.45rem 0.85rem', flex: 'none', fontSize: '0.85rem' }}
@@ -143,7 +143,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       </div>
 
       {/* Filtre par Catégorie & Filtre Période */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '1.25rem' }}>
+      <div className="filters-select-grid">
         <div>
           <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.2rem', marginBottom: '0.2rem' }}>
             <Tag size={12} /> Catégorie :

@@ -52,61 +52,63 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className="dashboard-root">
-      {/* Hero Balance Card */}
-      <div className="balance-hero-card">
-        <div className="balance-hero-inner">
-          <div className="balance-icon-wrap">
-            <Wallet size={20} />
+      <div className="dashboard-responsive-row">
+        <div>
+          {/* Hero Balance Card */}
+          <div className="balance-hero-card">
+            <div className="balance-hero-inner">
+              <div className="balance-icon-wrap">
+                <Wallet size={20} />
+              </div>
+              <div className="balance-label">SOLDE ACTUEL</div>
+              <div className={`balance-amount ${summary.balance < 0 ? 'negative' : ''}`}>
+                {formatCurrency(summary.balance, settings.currency)}
+              </div>
+            </div>
+
+            {/* Mini résumé du mois intégré */}
+            <div className="balance-month-strip">
+              <div className="month-strip-item income">
+                <ArrowUpRight size={14} />
+                <span>+{formatCurrency(monthSummary.totalIncome, settings.currency)}</span>
+              </div>
+              <div className="month-strip-separator" />
+              <div className="month-strip-item expense">
+                <ArrowDownRight size={14} />
+                <span>-{formatCurrency(monthSummary.totalExpenses, settings.currency)}</span>
+              </div>
+            </div>
           </div>
-          <div className="balance-label">SOLDE ACTUEL</div>
-          <div className={`balance-amount ${summary.balance < 0 ? 'negative' : ''}`}>
-            {formatCurrency(summary.balance, settings.currency)}
+
+          {/* Boutons rapides */}
+          <div className="quick-actions-grid">
+            <button
+              className="action-btn action-btn-income"
+              onClick={() => onOpenModal('income')}
+              aria-label="Ajouter un revenu"
+            >
+              <div className="action-btn-icon">
+                <Plus size={22} strokeWidth={3} />
+              </div>
+              <span>Revenu</span>
+            </button>
+
+            <button
+              className="action-btn action-btn-expense"
+              onClick={() => onOpenModal('expense')}
+              aria-label="Ajouter une dépense"
+            >
+              <div className="action-btn-icon">
+                <Minus size={22} strokeWidth={3} />
+              </div>
+              <span>Dépense</span>
+            </button>
           </div>
         </div>
 
-        {/* Mini résumé du mois intégré */}
-        <div className="balance-month-strip">
-          <div className="month-strip-item income">
-            <ArrowUpRight size={14} />
-            <span>+{formatCurrency(monthSummary.totalIncome, settings.currency)}</span>
-          </div>
-          <div className="month-strip-separator" />
-          <div className="month-strip-item expense">
-            <ArrowDownRight size={14} />
-            <span>-{formatCurrency(monthSummary.totalExpenses, settings.currency)}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Boutons rapides */}
-      <div className="quick-actions-grid">
-        <button
-          className="action-btn action-btn-income"
-          onClick={() => onOpenModal('income')}
-          aria-label="Ajouter un revenu"
-        >
-          <div className="action-btn-icon">
-            <Plus size={22} strokeWidth={3} />
-          </div>
-          <span>Revenu</span>
-        </button>
-
-        <button
-          className="action-btn action-btn-expense"
-          onClick={() => onOpenModal('expense')}
-          aria-label="Ajouter une dépense"
-        >
-          <div className="action-btn-icon">
-            <Minus size={22} strokeWidth={3} />
-          </div>
-          <span>Dépense</span>
-        </button>
-
-      </div>
-
-      {/* Dernières transactions */}
-      <div className="transactions-section">
-        <div className="section-header">
+        {/* Dernières transactions */}
+        <div className="transactions-section">
+          <div className="section-header">
           <h3 className="section-title">Dernières Opérations</h3>
           <button
             onClick={onNavigateToHistory}
@@ -149,6 +151,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             );
           })
         )}
+      </div>
       </div>
 
       {/* Répartition des dépenses ce mois-ci */}

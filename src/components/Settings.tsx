@@ -85,7 +85,8 @@ export const Settings: React.FC<SettingsProps> = ({
         </p>
       </div>
 
-      {/* Security PIN Code Section */}
+      <div className="settings-grid">
+        {/* Security PIN Code Section */}
       <div
         style={{
           background: 'var(--bg-card)',
@@ -337,6 +338,7 @@ export const Settings: React.FC<SettingsProps> = ({
             Effacer toutes les transactions
           </button>
         </div>
+      </div>
       </div>
 
       {/* Modal de définition / modification de PIN */}
